@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Accessibility, Volume2, Eye, Type, Languages } from 'lucide-react';
+import { Accessibility, Volume2, Eye, Type, Languages, Contrast } from 'lucide-react';
 import { useAccessibility } from '../contexts/AccessibilityContext';
 
 export default function AccessibilityToolbar() {
@@ -38,13 +38,26 @@ export default function AccessibilityToolbar() {
 
             <label className="flex items-center justify-between">
               <span className="flex items-center space-x-2">
-                <Eye className="w-4 h-4" />
+                <Contrast className="w-4 h-4" />
                 <span className="text-sm">High Contrast</span>
               </span>
               <input
                 type="checkbox"
                 checked={settings.highContrast}
                 onChange={(e) => updateSettings({ highContrast: e.target.checked })}
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+            </label>
+
+            <label className="flex items-center justify-between">
+              <span className="flex items-center space-x-2">
+                <Eye className="w-4 h-4" />
+                <span className="text-sm">Reduced Motion</span>
+              </span>
+              <input
+                type="checkbox"
+                checked={settings.reducedMotion}
+                onChange={(e) => updateSettings({ reducedMotion: e.target.checked })}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
             </label>
@@ -93,6 +106,12 @@ export default function AccessibilityToolbar() {
                 aria-label="Voice speed control"
               />
               <div className="text-xs text-gray-500 text-center">{settings.voiceSpeed}x</div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-200">
+              <p className="text-xs text-gray-600">
+                Changes are saved automatically and apply immediately.
+              </p>
             </div>
           </div>
         </div>

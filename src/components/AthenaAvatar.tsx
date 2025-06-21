@@ -1,21 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useAccessibility } from '../contexts/AccessibilityContext';
 
 interface AthenaAvatarProps {
   isActive: boolean;
   isSpeaking: boolean;
+  currentMessage?: string;
 }
 
-export default function AthenaAvatar({ isActive, isSpeaking }: AthenaAvatarProps) {
+export default function AthenaAvatar({ isActive, isSpeaking, currentMessage }: AthenaAvatarProps) {
   const [currentExpression, setCurrentExpression] = useState<'neutral' | 'speaking' | 'thinking'>('neutral');
+  const [isSigningASL, setIsSigningASL] = useState(false);
+  const { settings } = useAccessibility();
 
   useEffect(() => {
     if (isSpeaking) {
       setCurrentExpression('speaking');
+      if (settings.signLanguage) {
+        setIsSigningASL(true);
+        // Stop signing after message duration
+        const duration = (currentMessage?.length || 50) * 100;
+        setTimeout(() => setIsSigningASL(false), duration);
+      }
     } else {
       setCurrentExpression('neutral');
+      setIsSigningASL(false);
     }
-  }, [isSpeaking]);
+  }, [isSpeaking, currentMessage, settings.signLanguage]);
+
+  // Sign language hand positions for different letters/concepts
+  const getSignPosition = () => {
+    if (!isSigningASL || !currentMessage) return { left: 0, right: 0 };
+    
+    const time = Date.now() / 500; // Slow down the signing
+    const messageIndex = Math.floor(time) % currentMessage.length;
+    const char = currentMessage[messageIndex]?.toLowerCase();
+    
+    // Simple ASL-inspired hand positions for different letters
+    const positions: Record<string, { left: number; right: number }> = {
+      'a': { left: -20, right: 20 },
+      'b': { left: -10, right: 30 },
+      'c': { left: -30, right: 10 },
+      'h': { left: -15, right: 25 },
+      'e': { left: -25, right: 15 },
+      'l': { left: -5, right: 35 },
+      'o': { left: -35, right: 5 },
+      ' ': { left: 0, right: 0 }, // Pause
+      default: { left: -10, right: 10 }
+    };
+    
+    return positions[char] || positions.default;
+  };
+
+  const signPosition = getSignPosition();
 
   return (
     <div className="flex flex-col items-center justify-center h-full">
@@ -78,6 +115,59 @@ export default function AthenaAvatar({ isActive, isSpeaking }: AthenaAvatarProps
             >
               <div className="w-8 h-2 bg-white rounded-full" />
             </motion.div>
+
+            {/* Sign Language Hands - Only show if sign language is enabled */}
+            {settings.signLanguage && (
+              <>
+                {/* Left Hand */}
+                <motion.div
+                  className="absolute w-6 h-8 bg-blue-200 rounded-full"
+                  style={{
+                    left: '10%',
+                    top: '60%',
+                  }}
+                  animate={{
+                    x: isSigningASL ? signPosition.left : 0,
+                    y: isSigningASL ? Math.sin(Date.now() / 300) * 10 : 0,
+                    rotate: isSigningASL ? signPosition.left / 2 : 0,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: "easeInOut"
+                  }}
+                />
+                
+                {/* Right Hand */}
+                <motion.div
+                  className="absolute w-6 h-8 bg-blue-200 rounded-full"
+                  style={{
+                    right: '10%',
+                    top: '60%',
+                  }}
+                  animate={{
+                    x: isSigningASL ? signPosition.right : 0,
+                    y: isSigningASL ? Math.sin(Date.now() / 300 + Math.PI) * 10 : 0,
+                    rotate: isSigningASL ? signPosition.right / 2 : 0,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: "easeInOut"
+                  }}
+                />
+
+                {/* Sign Language Indicator */}
+                {isSigningASL && (
+                  <motion.div
+                    className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white/90 px-3 py-1 rounded-full text-xs font-medium text-gray-700"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                  >
+                    Signing in {settings.signLanguageType}
+                  </motion.div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Animated particles around avatar */}
@@ -130,7 +220,10 @@ export default function AthenaAvatar({ isActive, isSpeaking }: AthenaAvatarProps
               }}
             />
             <span className="text-sm font-medium text-gray-700">
-              {currentExpression === 'speaking' ? 'Speaking...' : 'Listening'}
+              {currentExpression === 'speaking' ? 
+                (settings.signLanguage ? `Speaking & Signing (${settings.signLanguageType})` : 'Speaking...') : 
+                'Listening'
+              }
             </span>
           </div>
         </motion.div>
@@ -145,7 +238,10 @@ export default function AthenaAvatar({ isActive, isSpeaking }: AthenaAvatarProps
       >
         <h2 className="text-3xl font-display font-bold text-white mb-2">Athena</h2>
         <p className="text-blue-200 text-lg">Your AI Legal Mentor</p>
-        <p className="text-blue-300 text-sm mt-1">Powered by advanced AI • Zero hallucinations</p>
+        <p className="text-blue-300 text-sm mt-1">
+          Powered by advanced AI • Zero hallucinations
+          {settings.signLanguage && ` • ${settings.signLanguageType} Sign Language`}
+        </p>
       </motion.div>
     </div>
   );

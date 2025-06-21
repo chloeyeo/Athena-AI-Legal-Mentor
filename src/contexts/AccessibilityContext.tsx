@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface AccessibilitySettings {
   reducedMotion: boolean;
@@ -35,10 +35,16 @@ interface AccessibilityProviderProps {
 }
 
 export default function AccessibilityProvider({ children }: AccessibilityProviderProps) {
-  const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
+  const [settings, setSettings] = useState<AccessibilitySettings>(() => {
+    // Load from localStorage if available
+    const saved = localStorage.getItem('accessibility-settings');
+    return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+  });
 
   const updateSettings = (newSettings: Partial<AccessibilitySettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
+    const updated = { ...settings, ...newSettings };
+    setSettings(updated);
+    localStorage.setItem('accessibility-settings', JSON.stringify(updated));
   };
 
   const announceToScreenReader = (message: string) => {
@@ -54,16 +60,35 @@ export default function AccessibilityProvider({ children }: AccessibilityProvide
     }, 1000);
   };
 
+  // Apply accessibility settings to document
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    // High contrast
+    if (settings.highContrast) {
+      root.classList.add('high-contrast');
+    } else {
+      root.classList.remove('high-contrast');
+    }
+
+    // Large text
+    if (settings.largeText) {
+      root.classList.add('large-text');
+    } else {
+      root.classList.remove('large-text');
+    }
+
+    // Reduced motion
+    if (settings.reducedMotion) {
+      root.classList.add('reduced-motion');
+    } else {
+      root.classList.remove('reduced-motion');
+    }
+  }, [settings]);
+
   return (
     <AccessibilityContext.Provider value={{ settings, updateSettings, announceToScreenReader }}>
-      <div 
-        className={`${settings.highContrast ? 'contrast-more' : ''} ${settings.largeText ? 'text-lg' : ''}`}
-        style={{ 
-          '--motion-duration': settings.reducedMotion ? '0s' : '0.3s' 
-        } as React.CSSProperties}
-      >
-        {children}
-      </div>
+      {children}
     </AccessibilityContext.Provider>
   );
 }

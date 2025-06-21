@@ -7,19 +7,20 @@ import {
   Phone, 
   Settings,
   MessageSquare,
-  Languages,
   Volume2,
-  Subtitles
+  VolumeX
 } from 'lucide-react';
 import { useAccessibility } from '../contexts/AccessibilityContext';
+import { useAudioRecording } from '../hooks/useAudioRecording';
+import { useTextToSpeech } from '../hooks/useTextToSpeech';
 import AthenaAvatar from '../components/AthenaAvatar';
 import LiveTranscript from '../components/LiveTranscript';
-import SignLanguageInterpreter from '../components/SignLanguageInterpreter';
 
 export default function LiveCall() {
   const [isCallActive, setIsCallActive] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [currentMessage, setCurrentMessage] = useState('');
   const [conversation, setConversation] = useState<Array<{
     speaker: 'user' | 'athena';
@@ -29,6 +30,17 @@ export default function LiveCall() {
   }>>([]);
   
   const { settings, announceToScreenReader } = useAccessibility();
+  const { isRecording, startRecording, stopRecording, audioLevel, error: recordingError } = useAudioRecording();
+  const { speak, stop: stopSpeaking, isSpeaking, error: speechError } = useTextToSpeech();
+
+  // Auto-start recording when mic is on and call is active
+  useEffect(() => {
+    if (isCallActive && isMicOn && !isRecording) {
+      startRecording();
+    } else if (!isMicOn && isRecording) {
+      stopRecording();
+    }
+  }, [isCallActive, isMicOn, isRecording, startRecording, stopRecording]);
 
   const startCall = () => {
     setIsCallActive(true);
@@ -37,49 +49,82 @@ export default function LiveCall() {
     // Simulate Athena greeting
     setTimeout(() => {
       const greeting = "Hello! I'm Athena, your AI legal mentor. I'm here to provide accurate, source-backed legal guidance. How can I help you today?";
-      setConversation([{
-        speaker: 'athena',
+      const athenaMessage = {
+        speaker: 'athena' as const,
         message: greeting,
         timestamp: new Date()
-      }]);
+      };
+      
+      setConversation([athenaMessage]);
       
       if (settings.screenReader) {
         announceToScreenReader(greeting);
       }
+      
+      // Speak the greeting if speaker is on
+      if (isSpeakerOn) {
+        speak(greeting);
+      }
     }, 1000);
   };
 
-  const endCall = () => {
+  const endCall = async () => {
+    if (isRecording) {
+      await stopRecording();
+    }
+    stopSpeaking();
     setIsCallActive(false);
+    setConversation([]);
     announceToScreenReader('Call with Athena ended');
   };
 
-  const sendMessage = () => {
-    if (!currentMessage.trim()) return;
+  const toggleMic = async () => {
+    if (isMicOn && isRecording) {
+      // Process the recorded audio when turning off mic
+      const audioBlob = await stopRecording();
+      if (audioBlob) {
+        // Here you would normally send to speech-to-text service
+        // For demo, we'll simulate transcription
+        simulateTranscription();
+      }
+    }
+    setIsMicOn(!isMicOn);
+  };
 
-    const userMessage = {
+  const simulateTranscription = () => {
+    const sampleQuestions = [
+      "What are the requirements to become a solicitor in the UK?",
+      "How do I handle a contract dispute?",
+      "What's the process for filing a patent application?",
+      "Can you explain employment law basics?",
+      "What are my rights as a tenant?"
+    ];
+    
+    const userMessage = sampleQuestions[Math.floor(Math.random() * sampleQuestions.length)];
+    
+    const newUserMessage = {
       speaker: 'user' as const,
-      message: currentMessage,
+      message: userMessage,
       timestamp: new Date()
     };
 
-    setConversation(prev => [...prev, userMessage]);
+    setConversation(prev => [...prev, newUserMessage]);
     
     // Simulate Athena's response
     setTimeout(() => {
       const responses = [
         {
-          message: "Based on the Solicitors Regulation Authority handbook, to qualify as a solicitor in England and Wales, you'll need to complete the Solicitors Qualifying Examination (SQE). This consists of SQE1, which tests functioning legal knowledge, and SQE2, which assesses practical legal skills.",
+          message: "Based on the Solicitors Regulation Authority handbook, to qualify as a solicitor in England and Wales, you'll need to complete the Solicitors Qualifying Examination (SQE). This consists of SQE1, which tests functioning legal knowledge, and SQE2, which assesses practical legal skills. You'll also need qualifying work experience and meet character and suitability requirements.",
           sources: [
             { title: "SRA Handbook - SQE Requirements", url: "https://sra.org.uk/sqa" },
             { title: "Solicitors Qualifying Examination Guide", url: "https://sra.org.uk/sqa-guide" }
           ]
         },
         {
-          message: "For immigration law queries, I recommend checking the UK Immigration Rules. The current requirements for work visas include meeting the skills threshold and salary requirements as outlined in Appendix Skilled Worker.",
+          message: "For contract disputes, the first step is to review the contract terms carefully. Under English contract law, you should identify any breaches and consider remedies available. I recommend documenting all communications and attempting negotiation before litigation. The Contract Rights of Third Parties Act 1999 may also be relevant depending on the circumstances.",
           sources: [
-            { title: "UK Immigration Rules", url: "https://gov.uk/immigration-rules" },
-            { title: "Skilled Worker Visa Requirements", url: "https://gov.uk/skilled-worker-visa" }
+            { title: "Contract Rights of Third Parties Act 1999", url: "https://legislation.gov.uk" },
+            { title: "Contract Law Principles", url: "https://gov.uk/contract-law" }
           ]
         }
       ];
@@ -97,10 +142,30 @@ export default function LiveCall() {
       if (settings.screenReader) {
         announceToScreenReader(`Athena says: ${response.message}`);
       }
+      
+      // Speak Athena's response if speaker is on
+      if (isSpeakerOn) {
+        speak(response.message);
+      }
     }, 2000);
+  };
 
+  const sendMessage = () => {
+    if (!currentMessage.trim()) return;
+
+    const userMessage = {
+      speaker: 'user' as const,
+      message: currentMessage,
+      timestamp: new Date()
+    };
+
+    setConversation(prev => [...prev, userMessage]);
+    simulateTranscription();
     setCurrentMessage('');
   };
+
+  const currentSpeaker = conversation.length > 0 ? conversation[conversation.length - 1]?.speaker : 'athena';
+  const currentSpeakerMessage = conversation.length > 0 ? conversation[conversation.length - 1]?.message : '';
 
   return (
     <div className="h-full">
@@ -124,6 +189,11 @@ export default function LiveCall() {
               <span className="text-sm text-gray-500">
                 {new Date().toLocaleTimeString()}
               </span>
+              {(recordingError || speechError) && (
+                <span className="text-red-600 text-sm">
+                  {recordingError || speechError}
+                </span>
+              )}
             </>
           )}
         </div>
@@ -136,32 +206,33 @@ export default function LiveCall() {
             <div className="h-full flex items-center justify-center relative">
               <AthenaAvatar 
                 isActive={isCallActive}
-                isSpeaking={conversation.length > 0 && conversation[conversation.length - 1]?.speaker === 'athena'}
+                isSpeaking={isSpeaking && currentSpeaker === 'athena'}
+                currentMessage={currentSpeakerMessage}
               />
               
-              {settings.signLanguage && (
-                <div className="absolute bottom-4 right-4">
-                  <SignLanguageInterpreter 
-                    message={conversation.length > 0 ? conversation[conversation.length - 1]?.message : ''}
-                    language={settings.signLanguageType}
-                  />
-                </div>
-              )}
-              
               {settings.transcriptionEnabled && (
-                <div className="absolute bottom-4 left-4 right-16">
+                <div className="absolute bottom-20 left-4 right-4">
                   <LiveTranscript 
-                    currentMessage={conversation.length > 0 ? conversation[conversation.length - 1]?.message : ''}
-                    speaker={conversation.length > 0 ? conversation[conversation.length - 1]?.speaker : 'athena'}
+                    currentMessage={currentSpeakerMessage}
+                    speaker={currentSpeaker}
                   />
                 </div>
               )}
               
-              {/* Your video preview */}
+              {/* Your video preview with audio level indicator */}
               <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg border-2 border-white overflow-hidden">
                 {isVideoOn ? (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center relative">
                     <span className="text-white text-sm">You</span>
+                    {/* Audio level indicator */}
+                    {isMicOn && (
+                      <div className="absolute bottom-1 left-1 right-1 h-1 bg-gray-700 rounded">
+                        <div 
+                          className="h-full bg-green-500 rounded transition-all duration-100"
+                          style={{ width: `${audioLevel * 100}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="w-full h-full bg-gray-600 flex items-center justify-center">
@@ -195,8 +266,8 @@ export default function LiveCall() {
             <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
               <div className="flex items-center space-x-4 bg-white/90 backdrop-blur-sm rounded-full px-6 py-3">
                 <button
-                  onClick={() => setIsMicOn(!isMicOn)}
-                  className={`p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 ${
+                  onClick={toggleMic}
+                  className={`p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 relative ${
                     isMicOn 
                       ? 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500' 
                       : 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-400'
@@ -204,6 +275,10 @@ export default function LiveCall() {
                   aria-label={isMicOn ? 'Mute microphone' : 'Unmute microphone'}
                 >
                   {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                  {/* Recording indicator */}
+                  {isRecording && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                  )}
                 </button>
                 
                 <button
@@ -216,6 +291,27 @@ export default function LiveCall() {
                   aria-label={isVideoOn ? 'Turn off camera' : 'Turn on camera'}
                 >
                   {isVideoOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsSpeakerOn(!isSpeakerOn);
+                    if (!isSpeakerOn) {
+                      stopSpeaking();
+                    }
+                  }}
+                  className={`p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 ${
+                    isSpeakerOn 
+                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500' 
+                      : 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-400'
+                  }`}
+                  aria-label={isSpeakerOn ? 'Mute speaker' : 'Unmute speaker'}
+                >
+                  {isSpeakerOn ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                  {/* Speaking indicator */}
+                  {isSpeaking && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+                  )}
                 </button>
                 
                 <button
@@ -300,6 +396,9 @@ export default function LiveCall() {
                 >
                   Send
                 </button>
+              </div>
+              <div className="mt-2 text-xs text-gray-500 text-center">
+                {isRecording ? 'Listening...' : 'Click mic to speak or type your question'}
               </div>
             </div>
           )}
