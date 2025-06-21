@@ -1,0 +1,310 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Video, 
+  VideoOff, 
+  Mic, 
+  MicOff, 
+  Phone, 
+  Settings,
+  MessageSquare,
+  Languages,
+  Volume2,
+  Subtitles
+} from 'lucide-react';
+import { useAccessibility } from '../contexts/AccessibilityContext';
+import AthenaAvatar from '../components/AthenaAvatar';
+import LiveTranscript from '../components/LiveTranscript';
+import SignLanguageInterpreter from '../components/SignLanguageInterpreter';
+
+export default function LiveCall() {
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [conversation, setConversation] = useState<Array<{
+    speaker: 'user' | 'athena';
+    message: string;
+    timestamp: Date;
+    sources?: Array<{ title: string; url: string }>;
+  }>>([]);
+  
+  const { settings, announceToScreenReader } = useAccessibility();
+
+  const startCall = () => {
+    setIsCallActive(true);
+    announceToScreenReader('Call with Athena started');
+    
+    // Simulate Athena greeting
+    setTimeout(() => {
+      const greeting = "Hello! I'm Athena, your AI legal mentor. I'm here to provide accurate, source-backed legal guidance. How can I help you today?";
+      setConversation([{
+        speaker: 'athena',
+        message: greeting,
+        timestamp: new Date()
+      }]);
+      
+      if (settings.screenReader) {
+        announceToScreenReader(greeting);
+      }
+    }, 1000);
+  };
+
+  const endCall = () => {
+    setIsCallActive(false);
+    announceToScreenReader('Call with Athena ended');
+  };
+
+  const sendMessage = () => {
+    if (!currentMessage.trim()) return;
+
+    const userMessage = {
+      speaker: 'user' as const,
+      message: currentMessage,
+      timestamp: new Date()
+    };
+
+    setConversation(prev => [...prev, userMessage]);
+    
+    // Simulate Athena's response
+    setTimeout(() => {
+      const responses = [
+        {
+          message: "Based on the Solicitors Regulation Authority handbook, to qualify as a solicitor in England and Wales, you'll need to complete the Solicitors Qualifying Examination (SQE). This consists of SQE1, which tests functioning legal knowledge, and SQE2, which assesses practical legal skills.",
+          sources: [
+            { title: "SRA Handbook - SQE Requirements", url: "https://sra.org.uk/sqa" },
+            { title: "Solicitors Qualifying Examination Guide", url: "https://sra.org.uk/sqa-guide" }
+          ]
+        },
+        {
+          message: "For immigration law queries, I recommend checking the UK Immigration Rules. The current requirements for work visas include meeting the skills threshold and salary requirements as outlined in Appendix Skilled Worker.",
+          sources: [
+            { title: "UK Immigration Rules", url: "https://gov.uk/immigration-rules" },
+            { title: "Skilled Worker Visa Requirements", url: "https://gov.uk/skilled-worker-visa" }
+          ]
+        }
+      ];
+
+      const response = responses[Math.floor(Math.random() * responses.length)];
+      const athenaMessage = {
+        speaker: 'athena' as const,
+        message: response.message,
+        timestamp: new Date(),
+        sources: response.sources
+      };
+
+      setConversation(prev => [...prev, athenaMessage]);
+      
+      if (settings.screenReader) {
+        announceToScreenReader(`Athena says: ${response.message}`);
+      }
+    }, 2000);
+
+    setCurrentMessage('');
+  };
+
+  return (
+    <div className="h-full">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-gray-900">
+            Live Call with Athena
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Your AI legal mentor with universal accessibility
+          </p>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {isCallActive && (
+            <>
+              <span className="flex items-center space-x-2 text-green-600 font-medium">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Live</span>
+              </span>
+              <span className="text-sm text-gray-500">
+                {new Date().toLocaleTimeString()}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+        {/* Main Video Area */}
+        <div className="lg:col-span-2 bg-black rounded-lg overflow-hidden relative">
+          {isCallActive ? (
+            <div className="h-full flex items-center justify-center relative">
+              <AthenaAvatar 
+                isActive={isCallActive}
+                isSpeaking={conversation.length > 0 && conversation[conversation.length - 1]?.speaker === 'athena'}
+              />
+              
+              {settings.signLanguage && (
+                <div className="absolute bottom-4 right-4">
+                  <SignLanguageInterpreter 
+                    message={conversation.length > 0 ? conversation[conversation.length - 1]?.message : ''}
+                    language={settings.signLanguageType}
+                  />
+                </div>
+              )}
+              
+              {settings.transcriptionEnabled && (
+                <div className="absolute bottom-4 left-4 right-16">
+                  <LiveTranscript 
+                    currentMessage={conversation.length > 0 ? conversation[conversation.length - 1]?.message : ''}
+                    speaker={conversation.length > 0 ? conversation[conversation.length - 1]?.speaker : 'athena'}
+                  />
+                </div>
+              )}
+              
+              {/* Your video preview */}
+              <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg border-2 border-white overflow-hidden">
+                {isVideoOn ? (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                    <span className="text-white text-sm">You</span>
+                  </div>
+                ) : (
+                  <div className="w-full h-full bg-gray-600 flex items-center justify-center">
+                    <VideoOff className="w-6 h-6 text-gray-400" />
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="h-full flex items-center justify-center bg-gradient-to-br from-primary-900 to-primary-800">
+              <div className="text-center text-white">
+                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Video className="w-12 h-12" />
+                </div>
+                <h2 className="text-xl font-semibold mb-2">Ready to meet Athena?</h2>
+                <p className="text-primary-200 mb-6">
+                  Start your live video call with your AI legal mentor
+                </p>
+                <button
+                  onClick={startCall}
+                  className="bg-accent-500 hover:bg-accent-600 text-white px-8 py-3 rounded-lg font-medium transition-colors focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 focus:ring-offset-primary-800"
+                >
+                  Start Call
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Call Controls */}
+          {isCallActive && (
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+              <div className="flex items-center space-x-4 bg-white/90 backdrop-blur-sm rounded-full px-6 py-3">
+                <button
+                  onClick={() => setIsMicOn(!isMicOn)}
+                  className={`p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 ${
+                    isMicOn 
+                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500' 
+                      : 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-400'
+                  }`}
+                  aria-label={isMicOn ? 'Mute microphone' : 'Unmute microphone'}
+                >
+                  {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                </button>
+                
+                <button
+                  onClick={() => setIsVideoOn(!isVideoOn)}
+                  className={`p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 ${
+                    isVideoOn 
+                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500' 
+                      : 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-400'
+                  }`}
+                  aria-label={isVideoOn ? 'Turn off camera' : 'Turn on camera'}
+                >
+                  {isVideoOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                </button>
+                
+                <button
+                  onClick={endCall}
+                  className="p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
+                  aria-label="End call"
+                >
+                  <Phone className="w-5 h-5" />
+                </button>
+                
+                <button
+                  className="p-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                  aria-label="Call settings"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Chat & Controls Panel */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
+              <MessageSquare className="w-5 h-5" />
+              <span>Conversation</span>
+            </h3>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {conversation.map((item, index) => (
+              <div key={index} className={`${item.speaker === 'user' ? 'text-right' : 'text-left'}`}>
+                <div
+                  className={`inline-block max-w-[80%] p-3 rounded-lg ${
+                    item.speaker === 'user'
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-900'
+                  }`}
+                >
+                  <p className="text-sm">{item.message}</p>
+                  {item.sources && (
+                    <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
+                      {item.sources.map((source, sourceIndex) => (
+                        <a
+                          key={sourceIndex}
+                          href={source.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-xs text-blue-600 hover:text-blue-800 underline"
+                        >
+                          📖 {source.title}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {item.timestamp.toLocaleTimeString()}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {isCallActive && (
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  placeholder="Type your question or use voice..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  aria-label="Type your question"
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!currentMessage.trim()}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  aria-label="Send message"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
