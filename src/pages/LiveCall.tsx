@@ -168,40 +168,44 @@ export default function LiveCall() {
   const currentSpeakerMessage = conversation.length > 0 ? conversation[conversation.length - 1]?.message : '';
 
   return (
-    <div className="h-full">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900">
-            Live Call with Athena
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Your AI legal mentor with universal accessibility
-          </p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          {isCallActive && (
-            <>
-              <span className="flex items-center space-x-2 text-green-600 font-medium">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Live</span>
-              </span>
-              <span className="text-sm text-gray-500">
-                {new Date().toLocaleTimeString()}
-              </span>
-              {(recordingError || speechError) && (
-                <span className="text-red-600 text-sm">
-                  {recordingError || speechError}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header - Responsive */}
+      <div className="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-gray-900">
+              Live Call with Athena
+            </h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">
+              Your AI legal mentor with universal accessibility
+            </p>
+          </div>
+          
+          <div className="flex items-center justify-between sm:justify-end space-x-4">
+            {isCallActive && (
+              <>
+                <span className="flex items-center space-x-2 text-green-600 font-medium text-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Live</span>
                 </span>
-              )}
-            </>
-          )}
+                <span className="text-xs sm:text-sm text-gray-500">
+                  {new Date().toLocaleTimeString()}
+                </span>
+                {(recordingError || speechError) && (
+                  <span className="text-red-600 text-xs sm:text-sm">
+                    {recordingError || speechError}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-        {/* Main Video Area */}
-        <div className="lg:col-span-2 bg-black rounded-lg overflow-hidden relative">
+      {/* Main Content - Responsive Layout */}
+      <div className="flex flex-col lg:flex-row h-[calc(100vh-120px)]">
+        {/* Video Area - Full width on mobile, 2/3 on desktop */}
+        <div className="flex-1 lg:flex-[2] bg-black relative overflow-hidden">
           {isCallActive ? (
             <div className="h-full flex items-center justify-center relative">
               <AthenaAvatar 
@@ -210,8 +214,9 @@ export default function LiveCall() {
                 currentMessage={currentSpeakerMessage}
               />
               
+              {/* Live Transcript - Responsive positioning */}
               {settings.transcriptionEnabled && (
-                <div className="absolute bottom-20 left-4 right-4">
+                <div className="absolute bottom-20 sm:bottom-24 left-2 right-2 sm:left-4 sm:right-4">
                   <LiveTranscript 
                     currentMessage={currentSpeakerMessage}
                     speaker={currentSpeaker}
@@ -219,11 +224,11 @@ export default function LiveCall() {
                 </div>
               )}
               
-              {/* Your video preview with audio level indicator */}
-              <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg border-2 border-white overflow-hidden">
+              {/* Your video preview - Responsive sizing */}
+              <div className="absolute top-2 sm:top-4 right-2 sm:right-4 w-20 h-16 sm:w-32 sm:h-24 bg-gray-800 rounded-lg border-2 border-white overflow-hidden">
                 {isVideoOn ? (
                   <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center relative">
-                    <span className="text-white text-sm">You</span>
+                    <span className="text-white text-xs sm:text-sm">You</span>
                     {/* Audio level indicator */}
                     {isMicOn && (
                       <div className="absolute bottom-1 left-1 right-1 h-1 bg-gray-700 rounded">
@@ -236,24 +241,24 @@ export default function LiveCall() {
                   </div>
                 ) : (
                   <div className="w-full h-full bg-gray-600 flex items-center justify-center">
-                    <VideoOff className="w-6 h-6 text-gray-400" />
+                    <VideoOff className="w-4 h-4 sm:w-6 sm:h-6 text-gray-400" />
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center bg-gradient-to-br from-primary-900 to-primary-800">
-              <div className="text-center text-white">
-                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Video className="w-12 h-12" />
+            <div className="h-full flex items-center justify-center bg-gradient-to-br from-primary-900 to-primary-800 p-4">
+              <div className="text-center text-white max-w-md">
+                <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Video className="w-8 h-8 sm:w-12 sm:h-12" />
                 </div>
-                <h2 className="text-xl font-semibold mb-2">Ready to meet Athena?</h2>
-                <p className="text-primary-200 mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold mb-2">Ready to meet Athena?</h2>
+                <p className="text-primary-200 mb-6 text-sm sm:text-base">
                   Start your live video call with your AI legal mentor
                 </p>
                 <button
                   onClick={startCall}
-                  className="bg-accent-500 hover:bg-accent-600 text-white px-8 py-3 rounded-lg font-medium transition-colors focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 focus:ring-offset-primary-800"
+                  className="bg-accent-500 hover:bg-accent-600 text-white px-6 sm:px-8 py-3 rounded-lg font-medium transition-colors focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 focus:ring-offset-primary-800"
                 >
                   Start Call
                 </button>
@@ -261,36 +266,36 @@ export default function LiveCall() {
             </div>
           )}
 
-          {/* Call Controls */}
+          {/* Call Controls - Responsive positioning and sizing */}
           {isCallActive && (
-            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
-              <div className="flex items-center space-x-4 bg-white/90 backdrop-blur-sm rounded-full px-6 py-3">
+            <div className="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2">
+              <div className="flex items-center space-x-2 sm:space-x-4 bg-white/90 backdrop-blur-sm rounded-full px-3 sm:px-6 py-2 sm:py-3">
                 <button
                   onClick={toggleMic}
-                  className={`p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 relative ${
+                  className={`p-2 sm:p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 relative ${
                     isMicOn 
                       ? 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500' 
                       : 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-400'
                   }`}
                   aria-label={isMicOn ? 'Mute microphone' : 'Unmute microphone'}
                 >
-                  {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                  {isMicOn ? <Mic className="w-4 h-4 sm:w-5 sm:h-5" /> : <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />}
                   {/* Recording indicator */}
                   {isRecording && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                    <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full animate-pulse" />
                   )}
                 </button>
                 
                 <button
                   onClick={() => setIsVideoOn(!isVideoOn)}
-                  className={`p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 ${
+                  className={`p-2 sm:p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 ${
                     isVideoOn 
                       ? 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500' 
                       : 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-400'
                   }`}
                   aria-label={isVideoOn ? 'Turn off camera' : 'Turn on camera'}
                 >
-                  {isVideoOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                  {isVideoOn ? <Video className="w-4 h-4 sm:w-5 sm:h-5" /> : <VideoOff className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </button>
 
                 <button
@@ -300,59 +305,59 @@ export default function LiveCall() {
                       stopSpeaking();
                     }
                   }}
-                  className={`p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 ${
+                  className={`p-2 sm:p-3 rounded-full transition-colors focus:ring-2 focus:ring-offset-2 ${
                     isSpeakerOn 
                       ? 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500' 
                       : 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-400'
                   }`}
                   aria-label={isSpeakerOn ? 'Mute speaker' : 'Unmute speaker'}
                 >
-                  {isSpeakerOn ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                  {isSpeakerOn ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />}
                   {/* Speaking indicator */}
                   {isSpeaking && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+                    <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded-full animate-pulse" />
                   )}
                 </button>
                 
                 <button
                   onClick={endCall}
-                  className="p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
+                  className="p-2 sm:p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
                   aria-label="End call"
                 >
-                  <Phone className="w-5 h-5" />
+                  <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
                 
                 <button
-                  className="p-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                  className="p-2 sm:p-3 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                   aria-label="Call settings"
                 >
-                  <Settings className="w-5 h-5" />
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Chat & Controls Panel */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5" />
+        {/* Chat Panel - Responsive width and positioning */}
+        <div className="w-full lg:w-80 xl:w-96 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col max-h-96 lg:max-h-none">
+          <div className="p-3 sm:p-4 border-b border-gray-200">
+            <h3 className="font-semibold text-gray-900 flex items-center space-x-2 text-sm sm:text-base">
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Conversation</span>
             </h3>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
             {conversation.map((item, index) => (
               <div key={index} className={`${item.speaker === 'user' ? 'text-right' : 'text-left'}`}>
                 <div
-                  className={`inline-block max-w-[80%] p-3 rounded-lg ${
+                  className={`inline-block max-w-[85%] sm:max-w-[80%] p-2 sm:p-3 rounded-lg ${
                     item.speaker === 'user'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-900'
                   }`}
                 >
-                  <p className="text-sm">{item.message}</p>
+                  <p className="text-xs sm:text-sm">{item.message}</p>
                   {item.sources && (
                     <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
                       {item.sources.map((source, sourceIndex) => (
@@ -377,21 +382,21 @@ export default function LiveCall() {
           </div>
           
           {isCallActive && (
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-3 sm:p-4 border-t border-gray-200">
               <div className="flex space-x-2">
                 <input
                   type="text"
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Type your question or use voice..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Type your question..."
+                  className="flex-1 px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                   aria-label="Type your question"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!currentMessage.trim()}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  className="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 text-sm"
                   aria-label="Send message"
                 >
                   Send

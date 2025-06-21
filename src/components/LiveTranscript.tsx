@@ -42,15 +42,15 @@ export default function LiveTranscript({ currentMessage, speaker }: LiveTranscri
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="bg-black/80 backdrop-blur-sm text-white p-4 rounded-lg max-w-2xl"
+          className="bg-black/80 backdrop-blur-sm text-white p-3 sm:p-4 rounded-lg max-w-full sm:max-w-2xl mx-auto"
         >
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start space-x-2 sm:space-x-3">
             <div className="flex-shrink-0">
-              <Subtitles className="w-5 h-5 text-blue-400 mt-0.5" />
+              <Subtitles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 mt-0.5" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-2">
-                <span className={`text-sm font-medium ${
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-2 mb-1 sm:mb-2">
+                <span className={`text-xs sm:text-sm font-medium ${
                   speaker === 'athena' ? 'text-blue-400' : 'text-green-400'
                 }`}>
                   {speaker === 'athena' ? 'Athena' : 'You'}
@@ -60,11 +60,11 @@ export default function LiveTranscript({ currentMessage, speaker }: LiveTranscri
                 </div>
               </div>
               
-              <div className="text-white leading-relaxed">
+              <div className="text-white leading-relaxed text-sm sm:text-base break-words">
                 {displayedText}
                 {isTyping && (
                   <motion.span
-                    className="inline-block w-0.5 h-5 bg-white ml-1"
+                    className="inline-block w-0.5 h-4 sm:h-5 bg-white ml-1"
                     animate={{ opacity: [1, 0] }}
                     transition={{ duration: 0.8, repeat: Infinity }}
                   />
