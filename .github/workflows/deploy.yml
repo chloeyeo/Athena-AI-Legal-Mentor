@@ -20,7 +20,7 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks-outs your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
       # Sets up Node.js
@@ -46,10 +46,10 @@ jobs:
           
       # At this point, you would add steps to deploy the 'dist' directory
       # For example, using the official Firebase Hosting action:
-      # - name: Deploy to Firebase Hosting
-      #   uses: FirebaseExtended/action-hosting-deploy@v0
-      #   with:
-      #     repoToken: '${{ secrets.GITHUB_TOKEN }}'
-      #     firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-      #     channelId: live
-      #     projectId: your-project-id 
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          channelId: live
+          projectId: athena-ai-legal-mentor 
