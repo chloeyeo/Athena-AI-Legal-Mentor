@@ -16,7 +16,7 @@ admin.initializeApp();
  * 4. Sending to Gemini Pro with strict prompt constraints
  * 5. Returning responses with mandatory source citations
  */
-export const getAIResponse = functions.https.onCall(async (data, context) => {
+export const getAIResponse = functions.region('europe-west2').https.onCall(async (data, context) => {
   // Ensure user is authenticated
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -53,7 +53,7 @@ export const getAIResponse = functions.https.onCall(async (data, context) => {
  * Cloud Function for speech-to-text transcription
  * Uses Google Cloud Speech-to-Text API for real-time transcription
  */
-export const transcribeAudio = functions.https.onCall(async (data, context) => {
+export const transcribeAudio = functions.region('europe-west2').https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -77,7 +77,7 @@ export const transcribeAudio = functions.https.onCall(async (data, context) => {
  * Cloud Function for text-to-speech synthesis
  * Uses Google Cloud Text-to-Speech API with accessibility features
  */
-export const synthesizeSpeech = functions.https.onCall(async (data, context) => {
+export const synthesizeSpeech = functions.region('europe-west2').https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -101,7 +101,7 @@ export const synthesizeSpeech = functions.https.onCall(async (data, context) => 
  * Cloud Function for document processing
  * Extracts text, generates summaries, and creates embeddings for RAG
  */
-export const processDocument = functions.https.onCall(async (data, context) => {
+export const processDocument = functions.region('europe-west2').https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -125,7 +125,7 @@ export const processDocument = functions.https.onCall(async (data, context) => {
  * Firestore trigger for real-time document processing
  * Automatically processes documents when uploaded
  */
-export const onDocumentCreated = functions.firestore
+export const onDocumentCreated = functions.region('europe-west2').firestore
   .document('documents/{documentId}')
   .onCreate(async (snap, context) => {
     const documentData = snap.data();
