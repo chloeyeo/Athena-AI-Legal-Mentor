@@ -32,12 +32,10 @@ jobs:
       # Installs dependencies
       - name: Install dependencies
         run: npm install
-        working-directory: ./project # Run npm install in the project sub-directory
 
       # Builds the project
       - name: Build
         run: npm run build
-        working-directory: ./project # Run npm build in the project sub-directory
         env: # This section makes the secrets available to the build command
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
